@@ -1,0 +1,6 @@
+CREATE TABLE `quotes` (
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `key` VARCHAR(64) NOT NULL UNIQUE,
+    `text` TEXT  NOT NULL,
+    `created_at` DATETIME NOT NULL
+);
