@@ -1,2 +1,4 @@
 database.sqlite
 .env
+*.ttf
+quotable

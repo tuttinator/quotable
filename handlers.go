@@ -1,27 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
-	"html"
+	"image/png"
 	"net/http"
+	"time"
 )
 
-type Quote struct {
-	Id   int
-	Key  string
-	Url  string
-	Text string
-}
-
 func QuoteShowHandler(w http.ResponseWriter, c *RequestContext) {
-	key := c.Params["key"]
-	fmt.Println(key)
-	quote := Quote{}
-
-	err := c.DB.QueryRow("SELECT id, key, url, text FROM quotes WHERE key=?", key).Scan(&quote.Id, &quote.Key, &quote.Text)
-	checkErr(err)
+	quote := FindQuoteByKey(c.Params["key"], c.DB)
 
 	data, err := json.Marshal(quote)
 	checkErr(err)
@@ -31,9 +20,41 @@ func QuoteShowHandler(w http.ResponseWriter, c *RequestContext) {
 }
 
 func ImageServeHandler(w http.ResponseWriter, c *RequestContext) {
-	fmt.Fprintf(w, "Hello, %q", html.EscapeString(c.Request.URL.Path))
+	w.Header().Set("Content-Type", "image/png")
+	// figure out the Content-Length of this new combined image somehow
+	// w.Header().Set("Content-Length", fmt.Sprint(pngImage.ContentLength))
+
+	quote := FindQuoteByKey(c.Params["key"], c.DB)
+
+	img := quote.Image()
+	b := bufio.NewWriter(w)
+	png.Encode(b, img)
+
 }
 
 func QuoteCreateHandler(w http.ResponseWriter, c *RequestContext) {
-	fmt.Fprintf(w, "Hello, %q", html.EscapeString(c.Request.URL.Path))
+	key := KeyGenerator(10)
+	quote := Quote{}
+
+	decoder := json.NewDecoder(c.Request.Body)
+	err := decoder.Decode(&quote)
+	checkErr(err)
+
+	quote.Key = key
+
+	stmt, err := c.DB.Prepare("INSERT INTO quotes (key, url, text, created_at) VALUES (?,?,?,?)")
+	checkErr(err)
+	res, err := stmt.Exec(quote.Key, quote.Url, quote.Text, time.Now())
+	checkErr(err)
+
+	id, err := res.LastInsertId()
+	checkErr(err)
+
+	fmt.Println(id)
+
+	data, err := json.Marshal(quote)
+	checkErr(err)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
 }

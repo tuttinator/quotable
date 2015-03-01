@@ -73,9 +73,3 @@ func newRequestContext(db *sql.DB, r *http.Request) *RequestContext {
 	params := mux.Vars(r)
 	return &RequestContext{db, params, r}
 }
-
-func checkErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}

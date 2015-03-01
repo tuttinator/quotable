@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	_ "github.com/joho/godotenv/autoload"
 	"net/http"
 	"os"
 	"os/signal"
@@ -32,4 +33,10 @@ func main() {
 
 	fmt.Println("Launching server on port", port)
 	http.ListenAndServe(":"+port, server.Router)
+}
+
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
