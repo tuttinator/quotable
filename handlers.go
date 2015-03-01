@@ -11,6 +11,7 @@ import (
 type Quote struct {
 	Id   int
 	Key  string
+	Url  string
 	Text string
 }
 
@@ -19,7 +20,7 @@ func QuoteShowHandler(w http.ResponseWriter, c *RequestContext) {
 	fmt.Println(key)
 	quote := Quote{}
 
-	err := c.DB.QueryRow("SELECT id, key, text FROM quotes WHERE key=?", key).Scan(&quote.Id, &quote.Key, &quote.Text)
+	err := c.DB.QueryRow("SELECT id, key, url, text FROM quotes WHERE key=?", key).Scan(&quote.Id, &quote.Key, &quote.Text)
 	checkErr(err)
 
 	data, err := json.Marshal(quote)
