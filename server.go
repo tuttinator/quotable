@@ -2,13 +2,13 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"html"
+	_ "github.com/mattn/go-sqlite3"
+	"log"
 	"net/http"
+	"runtime/debug"
 	"sync"
 
 	"github.com/gorilla/mux"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type Server struct {
@@ -17,19 +17,28 @@ type Server struct {
 	waitGroup *sync.WaitGroup
 }
 
+type HandlerWithContext func(
+	http.ResponseWriter,
+	*RequestContext)
+
+type RequestContext struct {
+	DB      *sql.DB
+	Params  map[string]string
+	Request *http.Request
+}
+
 func NewServer() *Server {
-	db, err := sql.Open("sqlite3", "./database.db")
-	checkErr(err)
+
+	db, err := sql.Open("sqlite3", "./database.sqlite")
+	if err != nil {
+		panic(err)
+	}
 
 	server := &Server{
 		db,
 		mux.NewRouter(),
 		&sync.WaitGroup{},
 	}
-
-	server.Router.HandlerFunc("/{key}.json", QuoteShowHandler).Methods("GET")
-	server.Router.HandlerFunc("/{key}.png", ImageServeHandler).Methods("GET")
-	server.Router.HandlerFunc("/create", QuoteCreateHandler).Methods("POST")
 
 	DefineRoutes(server)
 
@@ -40,24 +49,29 @@ func (s *Server) Close() {
 	s.DB.Close()
 }
 
-type Quote struct {
-	Key  string
-	Text string
+func (s *Server) DefineRoute(pattern string, handler HandlerWithContext) *mux.Route {
+	internalHandler := func(w http.ResponseWriter, r *http.Request) {
+		s.waitGroup.Add(1)
+		defer s.waitGroup.Done()
+
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("PANIC: %s\n%s", err, debug.Stack())
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		}()
+
+		context := newRequestContext(s.DB, r)
+
+		handler(w, context)
+	}
+
+	return s.Router.HandleFunc(pattern, internalHandler)
 }
 
-func QuoteShowHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func newRequestContext(db *sql.DB, r *http.Request) *RequestContext {
 	params := mux.Vars(r)
-	key := params["key"]
-
-	fmt.Fprintf(w, "Key is %q", key)
-}
-
-func ImageServeHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-}
-
-func QuoteCreateHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	return &RequestContext{db, params, r}
 }
 
 func checkErr(err error) {
