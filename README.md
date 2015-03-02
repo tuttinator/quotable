@@ -21,6 +21,11 @@ This generates a unique string as a `key`, which is the URL segment.
 PNG takes the text from the database and creates a transparent image.
 This is then overlayed with the `base.png`
 
+It requires two environment variables: `DATABASE_URL` and `FONT_FILE`.
+
+A live example is here:
+[quotable-nzh.herokuapp.com](http://quotable-nzh.herokuapp.com)
+
 ## TODO
 
 There is a chance of key string collisions. There is a uniqueness
