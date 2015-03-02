@@ -4,7 +4,6 @@ import (
 	"code.google.com/p/freetype-go/freetype"
 	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"image"
 	"image/draw"
 	"image/png"
@@ -23,7 +22,7 @@ func FindQuoteByKey(key string, db *sql.DB) Quote {
 	fmt.Println("Database lookup for " + key)
 	quote := Quote{}
 
-	err := db.QueryRow("SELECT key, url, text FROM quotes WHERE key=? LIMIT 1", key).Scan(&quote.Key, &quote.Url, &quote.Text)
+	err := db.QueryRow("SELECT key, url, text FROM quotes WHERE key=$1 LIMIT 1", key).Scan(&quote.Key, &quote.Url, &quote.Text)
 	checkErr(err)
 
 	return quote

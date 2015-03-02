@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"image/png"
 	"net/http"
 	"time"
@@ -42,15 +41,10 @@ func QuoteCreateHandler(w http.ResponseWriter, c *RequestContext) {
 
 	quote.Key = key
 
-	stmt, err := c.DB.Prepare("INSERT INTO quotes (key, url, text, created_at) VALUES (?,?,?,?)")
+	stmt, err := c.DB.Prepare("INSERT INTO quotes (key, url, text, created_at) VALUES ($1, $2, $3, $4);")
 	checkErr(err)
-	res, err := stmt.Exec(quote.Key, quote.Url, quote.Text, time.Now())
+	_, err = stmt.Exec(quote.Key, quote.Url, quote.Text, time.Now())
 	checkErr(err)
-
-	id, err := res.LastInsertId()
-	checkErr(err)
-
-	fmt.Println(id)
 
 	data, err := json.Marshal(quote)
 	checkErr(err)

@@ -30,13 +30,8 @@ type RequestContext struct {
 
 func NewServer() *Server {
 
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		panic(err)
-	}
-
 	server := &Server{
-		db,
+		SetupDB(),
 		mux.NewRouter(),
 		&sync.WaitGroup{},
 	}
@@ -73,4 +68,25 @@ func (s *Server) DefineRoute(pattern string, handler HandlerWithContext) *mux.Ro
 func newRequestContext(db *sql.DB, r *http.Request) *RequestContext {
 	params := mux.Vars(r)
 	return &RequestContext{db, params, r}
+}
+
+func SetupDB() *sql.DB {
+
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	checkErr(err)
+
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS "quotes" (
+		"id" SERIAL PRIMARY KEY,
+		"key" VARCHAR(64) NOT NULL UNIQUE,
+		"url" TEXT NOT NULL,
+		"text" TEXT  NOT NULL,
+		"created_at" TIMESTAMP NOT NULL
+	);
+	`)
+
+	checkErr(err)
+
+	return db
+
 }
