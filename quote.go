@@ -32,7 +32,7 @@ func FindQuoteByKey(key string, db *sql.DB) Quote {
 func (q *Quote) Image() *image.RGBA {
 	textLayer := q.TextToImage()
 
-	pngFile, err := os.Open("./base.png")
+	pngFile, err := os.Open("./assets/base.png")
 	checkErr(err)
 
 	img, err := png.Decode(pngFile)

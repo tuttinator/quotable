@@ -2,9 +2,10 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
+	"os"
 	"runtime/debug"
 	"sync"
 
@@ -29,7 +30,7 @@ type RequestContext struct {
 
 func NewServer() *Server {
 
-	db, err := sql.Open("sqlite3", "./database.sqlite")
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		panic(err)
 	}
