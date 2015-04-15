@@ -7,7 +7,7 @@ Written in a weekend as a proof of concept, and as an excuse to use Go.
 
 ## How does it work?
 
-![Quotable demo](http://i.imgur.com/QBg0DAm.gif)
+*First*: add a file named `base.png` in the `assets` folder.
 
 The frontend JavaScript posts the contents of the current highlighted
 selection to the `/create` endpoint.
@@ -22,9 +22,6 @@ PNG takes the text from the database and creates a transparent image.
 This is then overlayed with the `base.png`
 
 It requires two environment variables: `DATABASE_URL` and `FONT_FILE`.
-
-A live example is here:
-[quotable-nzh.herokuapp.com](http://quotable-nzh.herokuapp.com)
 
 ## TODO
 
